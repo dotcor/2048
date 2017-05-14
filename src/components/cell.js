@@ -10,10 +10,8 @@ class Cell extends React.Component {
 			top: y*100 + '%',
 		};
 
-		let content = tile === null ? false : <div className="game-tile">{ tile.value }</div>;
-
 		return <div className="game-cell" style={style}>
-			<div className="game-cell-inner">{ content }</div>
+			<div className="game-cell-inner"></div>
 		</div>
 	}
 }

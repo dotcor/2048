@@ -36,13 +36,19 @@ input[type="submit"] { cursor: pointer; }
 
 .game-head { margin-bottom: 20px; height: 40px; }
 .game-body { position: relative; overflow: hidden; height: 450px; width: 450px; padding: 5px; background: #baa; border-radius:6px; }
+.game-body.old {background: black; }
 
 .game-grid { position: relative; width: 110px; height: 110px; }
+
 .game-cell { position: absolute; width: 100%; height: 100%;  }
 .game-cell-inner { position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; background: #dcb; }
-.game-tile { position: absolute; background: #eee; color: #766; left: 0; top: 0; width: 100%; height: 100%; font-size: 55px; text-align: center; line-height: 100px; font-weight: bold;
- }
 
+.game-tile { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transition: transform 0.3s, top 0.3s, left 0.3s; }
+.game-tile-inner { position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; background: #eee; color: #766; font-size: 55px; text-align: center; line-height: 100px; font-weight: bold; z-index: 2; }
+.game-tile-shadow {  position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; background: #eee; color: #766; font-size: 55px; text-align: center; line-height: 100px; font-weight: bold; opacity: .3; }
+.game-tile-shadow {transition: transform 0.3s, top 0.3s, left 0.3s; z-index: 1; }
+.game-tile-shadow {transition: transform 0.3s, top 0.3s, left 0.3s; z-index: 1; }
+.game-tile-merging .game-tile-shadow { transition: none }
 .game-overlay { position: absolute; z-index: 2; display: none; }
 
 

@@ -1,5 +1,7 @@
 import React from 'react';
+import shortid from 'shortid';
 import Grid from './components/grid';
+import Score from './components/score';
 import { settings } from './settings';
 
 // Application main class
@@ -10,16 +12,22 @@ class Game extends React.Component {
 		this.handleKeyDown = this.handleKeyDown.bind(this);
 
 		this.state = {
-			isAnimating: false,
-			grid: [],
-			score: 0
+			isAnimating 	: false,
+			grid 			: [],
+			oldGrid			: [],
+			score 			: 0
 		}
 	}
 
 	// generate a tile
 	makeTile() {
 		return {
-			value: Math.random() <= settings.fourChance ? 4 : 2,
+			id 		: shortid.generate(),
+			value 	: Math.random() <= settings.fourChance ? 4 : 2,
+			merging	: false,
+			merged	: false,
+			oldX	: null,
+			oldY	: null
 		}
 	}
 
@@ -28,7 +36,9 @@ class Game extends React.Component {
 		let emptyCells = [];
 
 		grid.forEach((column, x) => column.forEach((tile, y) => {
-			emptyCells.push({x, y});
+			if (tile === null) {
+				emptyCells.push({x, y});
+			}
 		}))
 
 		return emptyCells;
@@ -66,42 +76,88 @@ class Game extends React.Component {
 		}
 
 		this.setState({
+			isAnimating : false,
+			score: 0,
 			grid
 		});
 	}
 
 	compressArray(arr) {
 		// remove all empty cells
-		arr = arr.filter(t => t !== null);
+		var input 	= arr.filter(t => t !== null);
+		var missing = 0;
+		var output  = [];
+		var score 	= 0;
 
-		for (var i = 1; i < arr.length; i++) {
-			if (arr[i].value === arr[i-1].value && !arr[i-1].merged) {
-				arr[i-1].merging = true;
-				arr[i-1].value *= 2;
-				arr[i].merged = true;
+		// walking one cell ahead
+		for (var i = 0; i < input.length; i++) {
+
+			// skip cell if it is already merged
+			if (input[i].merged) {
+				continue;
 			}
+
+			// out next is out of bounds, push current cell
+			if (input[i+1] === undefined) {
+				output.push(input[i]);
+
+				continue;
+			}
+
+			// next cell is equal to this one
+			if (input[i+1].value === input[i].value) {
+
+				input[i].value *= 2;
+				input[i].merging = true;
+				input[i].mergingFrom = {
+					x: input[i+1].oldX,
+					y: input[i+1].oldY
+				}
+				input[i+1].merged = true;
+
+				score += input[i].value;
+			}
+
+			output.push(input[i]);	
 		}
+
+		missing = settings.size - output.length;
 
 		// fill the compressed array with nulls till original size
-		for (var i = 0; i < (settings.size - arr.length); i++) {
-			arr.push(null);
+		for (var i = 0; i < missing; i++) {
+			output.push(null);
 		}
+
+		return {
+			output,
+			score
+		};
 	}
 
 	// moving tiles 
 	moveTiles(direction, deviation) {
 		const _this 	= this;
 		const oldGrid 	= this.state.grid;
+		var futureScore = this.state.score;
 		var grid 		= this.makeEmptyGrid(settings.size);
 		var futureGrid 	= [];
+		var emptyCells 	= [];
+		var newCell 	= null;
 
 		// right or left
 		if (direction === 'x') {
 			for (var rowIx = 0; rowIx < settings.size; rowIx++) {
-				var row = [];
+				var result 	= {};
+				var row 	= [];
 
 				for (var colIx = 0; colIx < settings.size; colIx++) {
-					row.push(oldGrid[colIx][rowIx]);
+					// save tile origin position
+					let tile = oldGrid[colIx][rowIx];
+					if (tile !== null) {
+						tile.oldX = colIx;
+						tile.oldY = rowIx;
+					}
+					row.push(tile);
 				}
 
 				// if the direction is "right",
@@ -110,7 +166,9 @@ class Game extends React.Component {
 					row.reverse();	
 				}
 
-				this.compressArray(row);
+				result 		= this.compressArray(row);
+				row 		= result.output;
+				futureScore += result.score;
 
 				// if the direction is "right",
 				// reverse back the resulted array
@@ -118,7 +176,7 @@ class Game extends React.Component {
 					row.reverse();
 				}
 
-				for (var colIx = settings.size - 1; colIx > -1; colIx--) {
+				for (var colIx = 0; colIx < settings.size; colIx++) {
 					grid[colIx][rowIx] = row.shift();
 				}
 			}
@@ -126,9 +184,18 @@ class Game extends React.Component {
 		// top or bottom		
 		} else {
 			for (var colIx = 0; colIx < settings.size; colIx++) {
+				var result 	= {};
+				var col 	= [];
 
-				// make a copy of the column
-				var col = oldGrid[colIx].slice();
+				for (var rowIx = 0; rowIx < settings.size; rowIx++) {
+					// save tile origin position
+					let tile = oldGrid[colIx][rowIx];
+					if (tile !== null) {
+						tile.oldX = colIx;
+						tile.oldY = rowIx;
+					}
+					col.push(tile);
+				}
 
 				// if the direction is "bottom",
 				// start from the bottommost cell 
@@ -136,12 +203,9 @@ class Game extends React.Component {
 					col.reverse();	
 				}
 
-				console.log('-------------------');
-				console.log(col, 'before');
-
-				this.compressArray(col);
-
-				console.log(col, 'after');
+				result 		= this.compressArray(col);
+				col 		= result.output;
+				futureScore += result.score;
 
 				// if the direction is "bottom",
 				// reverse back the resulted array
@@ -153,30 +217,53 @@ class Game extends React.Component {
 			}
 		}
 
-		// apply new state
+		// apply new state with tiles in position before animation starts
 		this.setState({
+			score: futureScore,
 			isAnimating: true,
 			grid: grid
 		});
 
-		futureGrid = grid.map(col => col.map(cell => {
-			if (cell === null || cell.merged) {
+		// prepare state when animation is finished
+		futureGrid = grid.map(col => col.map(tile => {
+			if (tile === null || tile.merged) {
 				return null;
 			}
 
-			return cell.merging = false;
+			return {
+				id: tile.id,
+				value: tile.value,
+				merging: false,
+				merged: false,
+				oldX: null,
+				oldY: null,
+			};
 		}));
 
+		// apply states after animation
+		// animation starts here
+		setTimeout(function(){
+			_this.setState({
+				isAnimating: true,
+				grid: futureGrid
+			})
+		}, 30)
 
+		// add new tile on empty cell
+		emptyCells 	= this.collectEmptyCells(futureGrid);
+
+		// check if there is empy space and add cell
+		if (emptyCells.length > 0) {
+			newCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+			futureGrid[newCell.x][newCell.y] = this.makeTile();
+		}
 
 		setTimeout(function(){
-			// add new cells
-
 			_this.setState({
 				isAnimating: false,
 				grid: futureGrid
 			})
-		}, 300)
+		}, 400)
 	}
 
 
@@ -213,6 +300,10 @@ class Game extends React.Component {
 		}
 	}
 
+	requestNewGame(){
+		this.buildGrid();
+	}
+
 
 	// lifecycle hooks
 	componentWillMount() {
@@ -220,18 +311,19 @@ class Game extends React.Component {
 	}
 
 	componentDidMount() {
-		window.addEventListener('keydown', this.handleKeyDown)
+		window.addEventListener('keydown', this.handleKeyDown);
 	}
 
 	render () {
 		return <div className="game">
 			<div className="game-head">
-
+				<Score value={this.state.score} />
 			</div>
 
 			<div className="game-body">
 				<Grid data={this.state.grid} />
 				
+
 				<div className="game-overlay">
 
 				</div>
@@ -241,3 +333,6 @@ class Game extends React.Component {
 }
 
 export default Game;
+			// <div className="game-body old">
+			// 	<Grid data={this.state.oldGrid} />
+			// </div>
