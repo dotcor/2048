@@ -1,0 +1,54 @@
+/* ================================================================ *\
+	#Reset
+\* ================================================================ */
+
+* { padding: 0; margin: 0; outline: 0; box-sizing: border-box; }
+
+/* ================================================================ *\
+	#Base
+\* ================================================================ */
+
+html,
+body { height: 100%; }
+
+html { }
+body { background: #f3f3f3; font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.3; color: #535353 }
+
+a { text-decoration: none; }
+a:hover { text-decoration: none; }
+
+
+button,
+input,
+select,
+textarea { font-family: inherit; font-size: inherit; color: inherit; -webkit-font-smoothing:antialiased; }
+
+button,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] { cursor: pointer; }
+
+/* ================================================================ *\
+	#Game
+\* ================================================================ */
+
+.game { position: relative; margin: 0 auto; width: 450px; }
+
+.game-head { margin-bottom: 20px; height: 40px; }
+.game-body { position: relative; overflow: hidden; height: 450px; width: 450px; padding: 5px; background: #baa; border-radius:6px; }
+
+.game-grid { position: relative; width: 110px; height: 110px; }
+.game-cell { position: absolute; width: 100%; height: 100%;  }
+.game-cell-inner { position: absolute; left: 5px; top: 5px; right: 5px; bottom: 5px; background: #dcb; }
+.game-tile { position: absolute; background: #eee; color: #766; left: 0; top: 0; width: 100%; height: 100%; font-size: 55px; text-align: center; line-height: 100px; font-weight: bold;
+ }
+
+.game-overlay { position: absolute; z-index: 2; display: none; }
+
+
+
+
+
+
+
+
