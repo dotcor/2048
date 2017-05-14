@@ -14,7 +14,7 @@ body { height: 100%; }
 html { }
 body { background: #f3f3f3; font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.3; color: #535353 }
 
-a { text-decoration: none; }
+a { text-decoration: none; cursor: pointer }
 a:hover { text-decoration: none; }
 
 
@@ -34,9 +34,10 @@ input[type="submit"] { cursor: pointer; }
 
 .game { position: relative; margin: 0 auto; width: 450px; }
 
-.game-head { margin-bottom: 20px; height: 40px; }
+.game-head { margin-bottom: 20px;  }
+.game-score { font-size: 30px; font-weight: bold; padding: 10px 0; }
+
 .game-body { position: relative; overflow: hidden; height: 450px; width: 450px; padding: 5px; background: #baa; border-radius:6px; }
-.game-body.old {background: black; }
 
 .game-grid { position: relative; width: 110px; height: 110px; }
 
@@ -49,8 +50,13 @@ input[type="submit"] { cursor: pointer; }
 .game-tile-shadow {transition: transform 0.3s, top 0.3s, left 0.3s; z-index: 1; }
 .game-tile-shadow {transition: transform 0.3s, top 0.3s, left 0.3s; z-index: 1; }
 .game-tile-merging .game-tile-shadow { transition: none }
-.game-overlay { position: absolute; z-index: 2; display: none; }
 
+.game-overlay { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 2; opacity: 0; visibility: hidden; transition:opacity 0.3s, visibility 0.3s; } 
+.game-overlay { background: rgba(255,255,255,.5); text-align: center; font-size: 30px; font-weight: bold; } 
+.game-overlay-message { padding: 50px 0; }
+.game-overlay-btn { display: inline-block; padding: 10px 20px; font-size: 20px; color: #fff; border-radius:4px; background: #8f7a66 }
+
+.game-overlay-visible { opacity: 1; visibility: visible; ; }
 
 
 

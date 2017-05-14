@@ -2,6 +2,7 @@ import React from 'react';
 import shortid from 'shortid';
 import Grid from './components/grid';
 import Score from './components/score';
+import Overlay from './components/overlay';
 import { settings } from './settings';
 
 // Application main class
@@ -10,12 +11,13 @@ class Game extends React.Component {
 		super(props);
 
 		this.handleKeyDown = this.handleKeyDown.bind(this);
+		this.requestNewGame = this.requestNewGame.bind(this);
 
 		this.state = {
 			isAnimating 	: false,
+			isOver 			: true,
 			grid 			: [],
-			oldGrid			: [],
-			score 			: 0
+			score 			: 0,
 		}
 	}
 
@@ -77,6 +79,7 @@ class Game extends React.Component {
 
 		this.setState({
 			isAnimating : false,
+			isOver: false,
 			score: 0,
 			grid
 		});
@@ -134,13 +137,35 @@ class Game extends React.Component {
 		};
 	}
 
+	canMakeAction(grid){
+
+		for (var x = 0; x < settings.size; x++) {
+			for (var y = 0; y < settings.size; y++) {
+				if (grid[x][y] === null) {
+					return true;
+				}
+
+				if (
+					x - 1 >= 0 && grid[x-1][y] !== null && grid[x-1][y].value === grid[x][y].value
+					|| x + 1 < settings.size && grid[x+1][y] !== null && grid[x+1][y].value === grid[x][y].value
+					|| y - 1 >= 0 && grid[x][y-1] !== null && grid[x][y-1].value === grid[x][y].value
+					|| y + 1 < settings.size && grid[x][y+1] !== null && grid[x][y+1].value === grid[x][y].value
+				) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	// moving tiles 
 	moveTiles(direction, deviation) {
 		const _this 	= this;
 		const oldGrid 	= this.state.grid;
-		var futureScore = this.state.score;
+		var nextScore = this.state.score;
 		var grid 		= this.makeEmptyGrid(settings.size);
-		var futureGrid 	= [];
+		var nextGrid 	= [];
 		var emptyCells 	= [];
 		var newCell 	= null;
 
@@ -151,7 +176,6 @@ class Game extends React.Component {
 				var row 	= [];
 
 				for (var colIx = 0; colIx < settings.size; colIx++) {
-					// save tile origin position
 					let tile = oldGrid[colIx][rowIx];
 					if (tile !== null) {
 						tile.oldX = colIx;
@@ -168,7 +192,7 @@ class Game extends React.Component {
 
 				result 		= this.compressArray(row);
 				row 		= result.output;
-				futureScore += result.score;
+				nextScore 	+= result.score;
 
 				// if the direction is "right",
 				// reverse back the resulted array
@@ -205,7 +229,7 @@ class Game extends React.Component {
 
 				result 		= this.compressArray(col);
 				col 		= result.output;
-				futureScore += result.score;
+				nextScore 	+= result.score;
 
 				// if the direction is "bottom",
 				// reverse back the resulted array
@@ -219,24 +243,24 @@ class Game extends React.Component {
 
 		// apply new state with tiles in position before animation starts
 		this.setState({
-			score: futureScore,
-			isAnimating: true,
-			grid: grid
+			score 		: nextScore,
+			isAnimating : true,
+			grid 		: grid
 		});
 
 		// prepare state when animation is finished
-		futureGrid = grid.map(col => col.map(tile => {
+		nextGrid = grid.map(col => col.map(tile => {
 			if (tile === null || tile.merged) {
 				return null;
 			}
 
 			return {
-				id: tile.id,
-				value: tile.value,
-				merging: false,
-				merged: false,
-				oldX: null,
-				oldY: null,
+				id 		: tile.id,
+				value 	: tile.value,
+				merging : false,
+				merged 	: false,
+				oldX 	: null,
+				oldY 	: null,
 			};
 		}));
 
@@ -244,32 +268,31 @@ class Game extends React.Component {
 		// animation starts here
 		setTimeout(function(){
 			_this.setState({
-				isAnimating: true,
-				grid: futureGrid
+				isAnimating	: true,
+				isOver 		: !_this.canMakeAction(nextGrid),
+				grid 		: nextGrid,
 			})
 		}, 30)
 
 		// add new tile on empty cell
-		emptyCells 	= this.collectEmptyCells(futureGrid);
+		emptyCells = this.collectEmptyCells(nextGrid);
 
 		// check if there is empy space and add cell
 		if (emptyCells.length > 0) {
 			newCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-			futureGrid[newCell.x][newCell.y] = this.makeTile();
+			nextGrid[newCell.x][newCell.y] = this.makeTile();
 		}
 
 		setTimeout(function(){
 			_this.setState({
-				isAnimating: false,
-				grid: futureGrid
+				isAnimating : false,
+				grid 		: nextGrid
 			})
-		}, 400)
+		}, 300)
 	}
 
-
-
 	handleKeyDown(e) {
-		if (this.state.isAnimating) {
+		if (this.state.isAnimating || this.state.isOver) {
 			return;
 		}
 
@@ -323,16 +346,10 @@ class Game extends React.Component {
 			<div className="game-body">
 				<Grid data={this.state.grid} />
 				
-
-				<div className="game-overlay">
-
-				</div>
+				<Overlay visible={this.state.isOver} onRequestNewGame={this.requestNewGame} />
 			</div>
 		</div>;
 	}
 }
 
 export default Game;
-			// <div className="game-body old">
-			// 	<Grid data={this.state.oldGrid} />
-			// </div>

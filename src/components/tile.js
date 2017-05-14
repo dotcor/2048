@@ -24,7 +24,6 @@ class Tile extends React.Component {
 
 		if (tile.merging) {
 			tileClass+= ' game-tile-merging';
-			console.log('in');
 		}
 
 		return <div className={tileClass} style={style}>

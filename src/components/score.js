@@ -1,6 +1,6 @@
 import React from 'react';
 
-// contains either Tile or null
+
 class Score extends React.Component {
 	render() {
 		const { value } = this.props;
