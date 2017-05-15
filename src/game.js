@@ -10,7 +10,7 @@ class Game extends React.Component {
 	constructor(props) {
 		super(props);
 
-		this.handleKeyDown = this.handleKeyDown.bind(this);
+		this.handleKeyDown  = this.handleKeyDown.bind(this);
 		this.requestNewGame = this.requestNewGame.bind(this);
 
 		this.state = {
@@ -46,6 +46,7 @@ class Game extends React.Component {
 		return emptyCells;
 	}
 
+	// make a new grid of the desired size, filled with nulls
 	makeEmptyGrid(size) {
 		let grid = [];
 
@@ -79,13 +80,13 @@ class Game extends React.Component {
 
 		this.setState({
 			isAnimating : false,
-			isOver: false,
-			score: 0,
+			isOver 		: false,
+			score 		: 0,
 			grid
 		});
 	}
 
-	compressArray(arr) {
+	compressSegment(arr) {
 		// remove all empty cells
 		var input 	= arr.filter(t => t !== null);
 		var missing = 0;
@@ -137,8 +138,9 @@ class Game extends React.Component {
 		};
 	}
 
+	// find an empty cell or start comparing 
+	// adjacent cells for the same value
 	canMakeAction(grid){
-
 		for (var x = 0; x < settings.size; x++) {
 			for (var y = 0; y < settings.size; y++) {
 				if (grid[x][y] === null) {
@@ -163,7 +165,7 @@ class Game extends React.Component {
 	moveTiles(direction, deviation) {
 		const _this 	= this;
 		const oldGrid 	= this.state.grid;
-		var nextScore = this.state.score;
+		var nextScore  	= this.state.score;
 		var grid 		= this.makeEmptyGrid(settings.size);
 		var nextGrid 	= [];
 		var emptyCells 	= [];
@@ -177,6 +179,7 @@ class Game extends React.Component {
 
 				for (var colIx = 0; colIx < settings.size; colIx++) {
 					let tile = oldGrid[colIx][rowIx];
+
 					if (tile !== null) {
 						tile.oldX = colIx;
 						tile.oldY = rowIx;
@@ -190,7 +193,7 @@ class Game extends React.Component {
 					row.reverse();	
 				}
 
-				result 		= this.compressArray(row);
+				result 		= this.compressSegment(row);
 				row 		= result.output;
 				nextScore 	+= result.score;
 
@@ -212,8 +215,8 @@ class Game extends React.Component {
 				var col 	= [];
 
 				for (var rowIx = 0; rowIx < settings.size; rowIx++) {
-					// save tile origin position
 					let tile = oldGrid[colIx][rowIx];
+
 					if (tile !== null) {
 						tile.oldX = colIx;
 						tile.oldY = rowIx;
@@ -227,7 +230,7 @@ class Game extends React.Component {
 					col.reverse();	
 				}
 
-				result 		= this.compressArray(col);
+				result 		= this.compressSegment(col);
 				col 		= result.output;
 				nextScore 	+= result.score;
 
@@ -327,7 +330,6 @@ class Game extends React.Component {
 		this.buildGrid();
 	}
 
-
 	// lifecycle hooks
 	componentWillMount() {
 		this.buildGrid();
@@ -335,6 +337,10 @@ class Game extends React.Component {
 
 	componentDidMount() {
 		window.addEventListener('keydown', this.handleKeyDown);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('keydown', this.handleKeyDown);
 	}
 
 	render () {
